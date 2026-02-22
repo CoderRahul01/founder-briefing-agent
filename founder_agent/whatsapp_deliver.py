@@ -20,7 +20,11 @@ def send_whatsapp_message(to_number: str, text: str):
         print("Twilio credentials missing. Skipping WhatsApp delivery.")
         return
 
-    client = Client(account_sid, auth_token)
+    try:
+        client = Client(account_sid, auth_token)
+    except Exception as e:
+        print(f"Failed to initialize Twilio client. Skipping WhatsApp delivery. Error: {e}")
+        return
 
     # WhatsApp officially supports 1600 chars. We chunk around 1500 to be safe.
     max_length = 1500

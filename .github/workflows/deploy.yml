@@ -6,8 +6,8 @@ on:
       - main
 
 env:
-  PROJECT_ID: foundtel
-  SERVICE_NAME: foundtel-onboarding
+  PROJECT_ID: foundtel-onboarding-161455282267
+  SERVICE_NAME: foundtel-briefing-agent
   REGION: us-central1
 
 jobs:
