@@ -12,7 +12,7 @@ from stripe import StripeClient
 
 # Global client instance to reuse connections
 # In production, ensure STRIPE_SECRET_KEY is set
-_api_key = os.getenv("STRIPE_SECRET_KEY")
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 _webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 # Use a synchronous client for webhook construction (CPU bound) and async for API calls
