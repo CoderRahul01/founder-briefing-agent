@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Foundtel{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-12">
+    <div class="space-y-2">
+        <h1 class="text-5xl font-bold tracking-tight text-center">Settings</h1>
+        <p class="text-white/50 text-center">Configure your agent's data sources and delivery.</p>
+    </div>
+
+    <form action="/update-settings" method="post" class="space-y-8">
+        <!-- Competitors -->
+        <div class="glass p-8 rounded-3xl space-y-6">
+            <div class="space-y-2">
+                <h2 class="text-xl font-bold">Competitor Intelligence</h2>
+                <p class="text-sm text-white/40">Enter the domains or names of companies you want TinyFish to monitor.</p>
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Competitor List</label>
+                <input type="text" name="competitor_list" value="{{ user.competitor_list }}" 
+                       class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
+                       placeholder="Linear, Notion, Asana">
+            </div>
+        </div>
+
+        <!-- Integrations -->
+        <div class="glass p-8 rounded-3xl space-y-6">
+            <div class="space-y-2">
+                <h2 class="text-xl font-bold">Revenue & Delivery</h2>
+                <p class="text-sm text-white/40">Connect your financial data and mobile alerts.</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Stripe Secret Key</label>
+                    <input type="password" name="stripe_key" value="{{ user.stripe_key or '' }}"
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
+                           placeholder="sk_live_...">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">WhatsApp Number</label>
+                    <input type="text" name="whatsapp_number" value="{{ user.whatsapp_number or '' }}"
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
+                           placeholder="+1234567890">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full bg-white text-black py-5 rounded-2xl font-bold text-xl hover:bg-white/90 transition-all active:scale-[0.98]">
+            Save Settings
+        </button>
+    </form>
+    
+    <div class="text-center">
+        <a href="/dashboard" class="text-white/30 hover:text-white transition-colors text-sm">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

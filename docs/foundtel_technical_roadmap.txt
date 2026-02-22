@@ -1,0 +1,531 @@
+Foundtel — Technical Roadmap v2
+Updated: MongoDB Atlas + Beanie ODM replacing SQLite
+
+MongoDB Atlas
+Already running — Cluster0 active
+Beanie ODM
+Best async ODM for MongoDB + Python
+Your DB
+Create 'foundtel' database now
+
+
+WHY BEANIE
+Beanie is the standard async ODM for MongoDB in Python. It wraps Motor (async MongoDB driver) and gives you Pydantic models for free — so your documents are fully typed, validated, and async-ready. Much cleaner than raw PyMongo for a growing codebase.
+
+Option
+Pros
+Cons
+Verdict
+PyMongo (raw)
+Simple, direct
+No models, no validation, verbose queries
+Skip — too raw
+MongoEngine
+Django-style ORM
+Sync only, older API, no Pydantic support
+Skip — outdated
+Motor (async)
+Fast, official async driver
+Raw queries, no model layer
+Use via Beanie
+Beanie (chosen)
+Pydantic models + Motor + async + typed queries
+Minor learning curve
+USE THIS
+
+
+
+Step 0
+Set Up MongoDB Atlas — Do This Right Now in Your Browser
+
+0.1
+Create the Foundtel database in Atlas
+
+	•	In your Atlas dashboard → click '+ Create database' (you can see this button in your screenshot)
+	•	Database name: foundtel
+	•	First collection name: users
+	•	Click Create
+
+0.2
+Create the remaining collections
+
+After creating the database, click into foundtel → click '+' to add collections:
+
+Collection
+Purpose
+Key Documents Stored
+users
+One document per founder using Foundtel
+email, gmail_token, stripe_key, competitors, plan, delivery prefs
+briefs
+Every brief ever sent — powers memory + history
+user_email, brief_text, date, revenue_data, emails_seen, competitor_headlines
+audit_logs
+Delivery confirmations and errors
+user_email, event_type, status, message, timestamp
+
+0.3
+Get your MongoDB connection string
+
+	•	In Atlas → click Connect on Cluster0
+	•	Choose 'Drivers' → Python → version 3.12+
+	•	Copy the connection string — looks like: mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/
+	•	Add to your .env file:
+
+# Add this to your .env file
+MONGODB_URL=mongodb+srv://your_username:your_password@cluster0.xxxxx.mongodb.net/foundtel?retryWrites=true&w=majority
+
+# IMPORTANT: Replace <password> with your actual Atlas password
+# The database name 'foundtel' is at the end of the URL
+
+0.4
+Whitelist your IP in Atlas Network Access
+
+	•	Atlas left sidebar → Network Access → + Add IP Address
+	•	Click 'Allow Access from Anywhere' (0.0.0.0/0) for development
+	•	Click Confirm
+NOTE
+For production you will restrict this to your server IP only. For now, Allow Anywhere is fine.
+
+
+
+Step 1
+Install Dependencies
+
+# In your terminal (venv must be active)
+$ cd ~/Documents/future-products/Hustle/Foundtel/founder-briefing-agent
+$ source venv/bin/activate
+
+# Install Beanie + Motor (async MongoDB driver)
+$ pip install beanie motor
+
+# Install async support for FastAPI later
+$ pip install 'fastapi[standard]' uvicorn
+
+# Update your requirements file
+$ pip freeze > requirements.txt
+
+# Verify Beanie installed
+$ python3 -c 'import beanie; print(beanie.__version__)'
+
+
+
+Step 2
+Create Beanie Document Models
+
+Create this folder and these three files inside your project:
+
+# Create the db folder
+$ mkdir -p founder_agent/db
+$ touch founder_agent/db/__init__.py
+$ touch founder_agent/db/models.py
+$ touch founder_agent/db/connection.py
+$ touch founder_agent/db/crud.py
+
+2.1
+Create founder_agent/db/models.py — All 3 document models
+
+# founder_agent/db/models.py
+from beanie import Document, Indexed
+from pydantic import Field, EmailStr
+from typing import Optional, List
+from datetime import datetime
+
+
+class User(Document):
+    """One document per founder using Foundtel."""
+
+    email:            Indexed(str, unique=True)       # primary identifier
+    stripe_key:       Optional[str]  = None           # sk_live_xxx or sk_test_xxx
+    gmail_token:      Optional[str]  = None           # full token.json as string
+    competitor_list:  str            = 'Linear,Notion,Asana'
+    delivery_email:   Optional[str]  = None           # where to send brief
+    whatsapp_number:  Optional[str]  = None           # +91xxxxxxxxxx
+    plan:             str            = 'solo'         # solo / founder / team
+    is_active:        bool           = True
+    created_at:       datetime       = Field(default_factory=datetime.utcnow)
+    last_brief_at:    Optional[datetime] = None
+
+    class Settings:
+        name = 'users'                                 # MongoDB collection name
+
+
+class Brief(Document):
+    """Every brief ever sent — used for memory and history."""
+
+    user_email:             str
+    brief_text:             str                        # full formatted brief
+    date:                   str                        # YYYY-MM-DD
+    revenue_summary:        Optional[str]  = None
+    emails_seen:            List[str]       = []       # email subjects shown
+    competitor_headlines:   List[str]       = []       # headlines shown
+    delivery_status:        str            = 'sent'   # sent / failed
+    created_at:             datetime       = Field(default_factory=datetime.utcnow)
+
+    class Settings:
+        name = 'briefs'
+
+
+class AuditLog(Document):
+    """Delivery confirmations and errors."""
+
+    user_email:   str
+    event_type:   str                                  # brief_sent / error / login
+    status:       str                                  # success / failure
+    message:      Optional[str] = None                # error message if any
+    metadata:     dict          = {}                   # extra context
+    created_at:   datetime      = Field(default_factory=datetime.utcnow)
+
+    class Settings:
+        name = 'audit_logs'
+
+2.2
+Create founder_agent/db/connection.py — Database connection
+
+# founder_agent/db/connection.py
+import os
+from beanie import init_beanie
+from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
+from .models import User, Brief, AuditLog
+
+load_dotenv()
+
+async def connect_db():
+    """Initialize Beanie with MongoDB Atlas. Call this once at app startup."""
+    client = AsyncIOMotorClient(os.getenv('MONGODB_URL'))
+    await init_beanie(
+        database=client.foundtel,               # uses 'foundtel' database
+        document_models=[User, Brief, AuditLog] # registers all collections
+    )
+    print('Connected to MongoDB Atlas — foundtel database ready')
+
+
+# For scripts that need sync-style usage (like CLI tools):
+def connect_db_sync():
+    import asyncio
+    asyncio.run(connect_db())
+
+2.3
+Create founder_agent/db/crud.py — All database operations
+
+# founder_agent/db/crud.py
+from typing import Optional, List
+from datetime import datetime, date
+from .models import User, Brief, AuditLog
+
+
+# ── USER OPERATIONS ──────────────────────────────────────────
+
+async def create_user(email: str, stripe_key: str = None,
+                      gmail_token: str = None,
+                      competitor_list: str = 'Linear,Notion,Asana',
+                      plan: str = 'solo') -> User:
+    user = User(
+        email=email,
+        stripe_key=stripe_key,
+        gmail_token=gmail_token,
+        competitor_list=competitor_list,
+        delivery_email=email,
+        plan=plan
+    )
+    await user.insert()
+    return user
+
+
+async def get_user(email: str) -> Optional[User]:
+    return await User.find_one(User.email == email)
+
+
+async def get_all_active_users() -> List[User]:
+    return await User.find(User.is_active == True).to_list()
+
+
+async def update_last_brief(email: str):
+    user = await get_user(email)
+    if user:
+        user.last_brief_at = datetime.utcnow()
+        await user.save()
+
+
+async def update_gmail_token(email: str, token_json: str):
+    user = await get_user(email)
+    if user:
+        user.gmail_token = token_json
+        await user.save()
+
+
+# ── BRIEF OPERATIONS (Memory) ────────────────────────────────
+
+async def save_brief(user_email: str, brief_text: str,
+                     emails_seen: list, competitor_headlines: list,
+                     revenue_summary: str = None) -> Brief:
+    brief = Brief(
+        user_email=user_email,
+        brief_text=brief_text,
+        date=str(date.today()),
+        emails_seen=emails_seen,
+        competitor_headlines=competitor_headlines,
+        revenue_summary=revenue_summary,
+    )
+    await brief.insert()
+    return brief
+
+
+async def get_yesterday_brief(user_email: str) -> Optional[Brief]:
+    from datetime import timedelta
+    yesterday = str(date.today() - timedelta(days=1))
+    return await Brief.find_one(
+        Brief.user_email == user_email,
+        Brief.date == yesterday
+    )
+
+
+async def get_brief_history(user_email: str, limit: int = 7) -> List[Brief]:
+    return await Brief.find(
+        Brief.user_email == user_email
+    ).sort(-Brief.created_at).limit(limit).to_list()
+
+
+# ── AUDIT LOG ────────────────────────────────────────────────
+
+async def log_event(user_email: str, event_type: str,
+                    status: str, message: str = None, metadata: dict = {}):
+    log = AuditLog(
+        user_email=user_email,
+        event_type=event_type,
+        status=status,
+        message=message,
+        metadata=metadata
+    )
+    await log.insert()
+
+
+
+Step 3
+Update deliver_brief.py to Use MongoDB
+
+# founder_agent/deliver_brief.py  (fully updated)
+import asyncio, os, json
+from datetime import datetime
+from dotenv import load_dotenv
+from founder_agent.db.connection import connect_db
+from founder_agent.db.crud import (
+    get_all_active_users, update_last_brief,
+    save_brief, get_yesterday_brief, log_event
+)
+load_dotenv()
+
+
+async def run_brief_for_user(user):
+    """Runs the full brief pipeline for a single user."""
+    print(f'Running brief for {user.email}...')
+
+    # Load yesterday for memory context
+    yesterday = await get_yesterday_brief(user.email)
+    memory_context = ''
+    if yesterday:
+        memory_context = f'''
+YESTERDAY ({yesterday.date}):
+Emails shown: {', '.join(yesterday.emails_seen[:3])}
+Competitor headlines: {', '.join(yesterday.competitor_headlines[:3])}
+Do NOT repeat these items today.
+'''
+
+    # Set this user's env vars for sub-agents
+    os.environ['STRIPE_SECRET_KEY']  = user.stripe_key or ''
+    os.environ['COMPETITOR_LIST']    = user.competitor_list
+    os.environ['MEMORY_CONTEXT']     = memory_context
+
+    # Run the ADK agent
+    from google.adk.runners import InMemoryRunner
+    from founder_agent.agent import root_agent
+    runner = InMemoryRunner(agent=root_agent)
+    result = runner.run('Give me my morning brief')
+    brief_text = result.text
+
+    # Extract items seen (simple extraction for memory)
+    emails_seen = []          # populate from inbox_agent result
+    comp_headlines = []       # populate from competitor_agent result
+
+    # Save brief to MongoDB (powers memory tomorrow)
+    await save_brief(
+        user_email=user.email,
+        brief_text=brief_text,
+        emails_seen=emails_seen,
+        competitor_headlines=comp_headlines,
+    )
+
+    # Send the brief
+    send_brief_email(brief_text, to=user.delivery_email)
+    await update_last_brief(user.email)
+    await log_event(user.email, 'brief_sent', 'success')
+    print(f'Brief sent to {user.email}')
+
+
+async def run_all_briefs():
+    """Main entry point — runs brief for every active user."""
+    await connect_db()                          # connect to MongoDB Atlas
+    users = await get_all_active_users()
+    print(f'Running briefs for {len(users)} users...')
+    for user in users:
+        try:
+            await run_brief_for_user(user)
+        except Exception as e:
+            await log_event(user.email, 'brief_error', 'failure', str(e))
+            print(f'Failed for {user.email}: {e}')
+
+
+if __name__ == '__main__':
+    asyncio.run(run_all_briefs())
+
+
+
+Step 4
+Add Yourself as First User in MongoDB
+
+Run this script once from your terminal. It connects to Atlas and creates your user document in the foundtel database:
+
+# Save as: add_first_user.py in your project root
+# Then run: python3 add_first_user.py
+
+import asyncio, json, os
+from dotenv import load_dotenv
+load_dotenv()
+
+async def main():
+    from founder_agent.db.connection import connect_db
+    from founder_agent.db.crud import create_user, get_user
+
+    await connect_db()
+
+    # Check if you already exist
+    existing = await get_user('rahulpandey.creates@gmail.com')
+    if existing:
+        print('User already exists in MongoDB!')
+        print(f'Plan: {existing.plan} | Active: {existing.is_active}')
+        return
+
+    # Read your Gmail token
+    token_path = os.path.join('founder_agent', 'secrets', 'token.json')
+    with open(token_path) as f:
+        token_str = f.read()
+
+    user = await create_user(
+        email='rahulpandey.creates@gmail.com',
+        stripe_key=os.getenv('STRIPE_SECRET_KEY'),
+        gmail_token=token_str,
+        competitor_list=os.getenv('COMPETITOR_LIST', 'Linear,Notion,Asana'),
+        plan='founder'
+    )
+    print(f'User created! ID: {user.id}')
+    print('Check MongoDB Atlas -> foundtel -> users collection')
+
+asyncio.run(main())
+
+# Run it:
+$ python3 add_first_user.py
+
+# Expected output:
+# Connected to MongoDB Atlas — foundtel database ready
+# User created! ID: 64f3c2a1b2e3d4f5a6b7c8d9
+# Check MongoDB Atlas -> foundtel -> users collection
+
+VERIFY IN ATLAS
+After running the script, go to MongoDB Atlas → foundtel → users collection. You should see your document appear with email, stripe_key, gmail_token, and plan fields. This confirms the full connection is working.
+
+
+
+Step 5
+Test the Full Pipeline End-to-End
+
+5.1
+Run a quick connection test
+
+# Save as test_mongo.py and run
+import asyncio
+from dotenv import load_dotenv
+load_dotenv()
+
+async def test():
+    from founder_agent.db.connection import connect_db
+    from founder_agent.db.crud import get_all_active_users
+
+    await connect_db()
+    users = await get_all_active_users()
+    print(f'Active users in MongoDB: {len(users)}')
+    for u in users:
+        print(f'  -> {u.email} | plan: {u.plan} | active: {u.is_active}')
+
+asyncio.run(test())
+
+5.2
+Run deliver_brief.py to send the brief via MongoDB
+
+# This replaces running the ADK agent manually
+# It fetches users from MongoDB and sends each a brief
+$ python3 -m founder_agent.deliver_brief
+
+# Expected output:
+# Connected to MongoDB Atlas — foundtel database ready
+# Running briefs for 1 users...
+# Running brief for rahulpandey.creates@gmail.com...
+# Brief sent to rahulpandey.creates@gmail.com
+
+# Then check Atlas -> foundtel -> briefs collection
+# You should see a new document with today's brief stored
+
+
+
+Final Structure
+What Your Codebase Looks Like After All Steps
+
+founder-briefing-agent/
+  founder_agent/
+    __init__.py
+    agent.py                    # coordinator — unchanged
+    deliver_brief.py            # UPDATED — uses MongoDB
+    sub_agents/
+      __init__.py
+      revenue_agent.py          # unchanged
+      inbox_agent.py            # unchanged
+      competitor_agent.py       # unchanged
+    db/
+      __init__.py               # NEW
+      models.py                 # NEW — User, Brief, AuditLog
+      connection.py             # NEW — MongoDB Atlas connect
+      crud.py                   # NEW — all DB operations
+    secrets/
+      token.json                # gitignored
+      credentials.json          # gitignored
+  tests/
+  add_first_user.py             # NEW — run once
+  test_mongo.py                 # NEW — verify connection
+  .env                          # add MONGODB_URL
+  .gitignore
+  requirements.txt
+
+What You Will See in MongoDB Atlas After Running
+
+Collection
+After Step 4
+After Step 5
+After 1 Week
+users
+1 doc — your founder profile
+last_brief_at updated
+More docs as users sign up
+briefs
+Empty
+1 doc — today's brief stored
+7 docs — full week history
+audit_logs
+Empty
+1 doc — brief_sent success
+Logs for every run
+
+
+Execute in this exact order:
+Step 0 (Atlas setup) → Step 1 (pip install) → Step 2 (create model files) → Step 3 (update deliver_brief) → Step 4 (add yourself) → Step 5 (test)
+
+Every command in this doc is copy-paste ready.

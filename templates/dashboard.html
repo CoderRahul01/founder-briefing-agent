@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Foundtel{% endblock %}
+
+{% block content %}
+<div class="space-y-12">
+    {% if error %}
+    <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl flex items-center space-x-3 animate-pulse">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+        <span class="font-medium">{{ error }}</span>
+    </div>
+    {% endif %}
+    <!-- Header -->
+    <div class="flex justify-between items-end">
+        <div class="space-y-2">
+            <h1 class="text-5xl font-bold tracking-tight">Dashboard</h1>
+            <p class="text-white/50 text-lg">Your agent is active and monitoring {{ user.competitor_list or 'your competitors' }}.</p>
+        </div>
+        <div class="flex space-x-3">
+            <form action="/trigger-briefs-now" method="post">
+                <button type="submit" class="bg-white/5 hover:bg-white/10 px-6 py-3 rounded-2xl transition-all font-medium border border-white/5">
+                    Generate Brief Now
+                </button>
+            </form>
+            <a href="/settings" class="bg-white text-black px-6 py-3 rounded-2xl hover:bg-white/90 transition-all font-medium">
+                System Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass p-8 rounded-3xl space-y-4">
+            <div class="text-white/50 text-sm font-medium uppercase tracking-wider">Plan Status</div>
+            <div class="text-3xl font-bold flex items-center space-x-2">
+                <span>{{ user.plan|capitalize }}</span>
+                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full border border-green-500/20">Active</span>
+            </div>
+        </div>
+        <div class="glass p-8 rounded-3xl space-y-4">
+            <div class="text-white/50 text-sm font-medium uppercase tracking-wider">Integrations</div>
+            <div class="flex space-x-2">
+                <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/20" title="Gmail Connected">
+                    <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </div>
+                {% if user.stripe_key %}
+                <div class="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center border border-indigo-500/20" title="Stripe Connected">
+                    <svg class="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 1.99-.9 1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="glass p-8 rounded-3xl space-y-4">
+            <div class="text-white/50 text-sm font-medium uppercase tracking-wider">Next Brief</div>
+            <div class="text-3xl font-bold">Tomorrow, 7:00 AM</div>
+        </div>
+    </div>
+
+    <!-- Brief History -->
+    <div class="space-y-6">
+        <h2 class="text-2xl font-bold">Brief History</h2>
+        {% if briefs %}
+        <div class="space-y-4">
+            {% for brief in briefs %}
+            <div class="glass p-6 rounded-2xl flex justify-between items-center group hover:bg-white/[0.05] transition-all cursor-pointer">
+                <div class="space-y-1">
+                    <div class="font-bold text-lg">Daily Brief — {{ brief.date }}</div>
+                    <div class="text-white/40 text-sm line-clamp-1 truncate max-w-xl">
+                        {{ brief.brief_text[:100] }}...
+                    </div>
+                </div>
+                <button class="opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/5">
+                    View Full Brief
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="glass p-12 rounded-3xl text-center space-y-4">
+            <div class="text-white/20">
+                <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <p>No briefs generated yet. Your agent is preparing your first one.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

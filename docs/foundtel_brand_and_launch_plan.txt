@@ -1,0 +1,335 @@
+Foundtel
+Brand Strategy · Feature Roadmap · Monetization · Launch Plan Today
+
+✅ Working Product
+Morning brief sent at 3:46 AM today
+🐟 Accelerator
+TinyFish credits confirmed + applied
+🚀 Goal
+First paying user today
+
+
+
+01
+What You Built — And Why It's a Real Business
+
+PROOF
+Your agent sent this email at 3:46 AM today. It read your Gmail, checked Stripe, browsed competitors, and wrote a brief. Nobody else has this running.
+
+That email in your Gmail inbox is your unfair advantage. You didn't just build a prototype — you built a working AI chief of staff that runs daily. The market gap this fits into is massive and surprisingly underserved.
+
+The Market Gap Nobody Has Filled
+
+Tool
+Price/mo
+What it does
+What it MISSES
+Sunsama
+$20
+Daily planner — you drag tasks manually
+Reactive. You go to it. No intelligence.
+Motion
+$34
+AI auto-scheduling of calendar
+Only calendar. Zero business intelligence.
+Brief My Meeting
+Free
+Pre-meeting email briefings
+Only for meetings. Not a daily OS.
+Zapier
+$20-50
+Connects apps, triggers actions
+Executes tasks. Doesn't synthesize intelligence.
+Foundtel (yours)
+TBD
+Proactive AI that synthesizes ALL tools into one morning brief
+Nothing in this category exists yet.
+
+KEY INSIGHT
+Sunsama reached profitability in 2022 with just 10 employees charging $20/month for a manual daily planner. Your product is proactive, AI-powered, and does in 30 seconds what takes founders 2 hours. You have a stronger value prop at a higher price point.
+
+
+
+02
+Brand Identity — Foundtel
+
+Name: Foundtel
+Founder + Intel. Clean, memorable, says exactly what it is. Avoid overcomplicating it — the name already works. Stick with it.
+
+Positioning Statement
+
+ONE LINE
+Foundtel is the AI chief of staff that gives tech founders a 3-minute morning intelligence brief — so your first 2 hours go to building, not catching up.
+
+Brand Voice
+
+Attribute
+What it means in practice
+Direct
+No fluff. Short sentences. Founders are busy — your copy respects that.
+Confident
+Don't say 'helps you maybe save time'. Say 'saves 2 hours daily'.
+Founder-to-founder
+You are a founder too. Write like someone who lives this pain, not a SaaS marketer.
+Minimal
+Dark background, clean typography, zero clutter. The product is calm — the brand should be too.
+
+Taglines (pick one for launch)
+	•	Your morning brief. Every morning. Already in your inbox.
+	•	Stop gathering context. Start making decisions.
+	•	What if your first 2 hours went to building?
+	•	The AI chief of staff that wakes up before you do.
+
+
+
+03
+Feature Roadmap — What to Build and When
+
+PHILOSOPHY
+Don't over-engineer. Your working MVP is more valuable than a polished product nobody uses. Ship fast, charge early, iterate on real feedback. Every feature below should solve a pain a real paying founder told you about.
+
+NOW — What's Already Working (Ship This Week)
+
+Feature
+Status
+Value to Founder
+Daily morning brief via email
+✅ LIVE
+Replaces 2 hours of manual inbox + data gathering
+Revenue pulse (Stripe)
+✅ LIVE
+MRR, weekly revenue, anomaly detection
+Inbox intelligence (Gmail)
+✅ LIVE
+Top 3 urgent emails surfaced and categorized
+Competitor radar (TinyFish)
+✅ LIVE
+Competitor blog/changelog browsed daily
+Google ADK multi-agent
+✅ LIVE
+Coordinator + 3 sub-agents running in parallel
+
+NEXT — Ship in Week 2-3 (Accelerator Demo Upgrades)
+
+Feature
+Effort
+Why It Matters
+WhatsApp delivery (via Twilio)
+Low — 2 hrs
+Founders check WhatsApp more than email. Massive retention boost.
+Voice brief via ElevenLabs
+Low — 3 hrs
+Listen during commute. Accelerator partner = free credits.
+Competitor pricing monitor (TinyFish)
+Medium — 4 hrs
+Detects when competitors change pricing — high signal for founders.
+Competitor job board tracking (TinyFish)
+Medium — 4 hrs
+Hiring = strategy signal. Who they hire tells you where they're going.
+One-click onboarding (OAuth flow)
+Medium — 1 day
+Right now setup takes 1 hour. Needs to take 5 minutes for users.
+
+LATER — Month 2+ (After First 10 Paying Users)
+
+Feature
+Why Wait
+Slack integration
+Validate WhatsApp + email first. Don't build 3 channels before 1 works.
+Linear/Jira team signal agent
+Needs multi-user auth. Save for after solo founder MVP works.
+Investor update auto-drafter
+High value but complex. Build once you have founder testimonials.
+Calendar prep agent (meeting briefs)
+briefmymeeting.com does this. Differentiate first, then expand.
+MongoDB memory (what changed vs yesterday)
+Powerful but not blocking. Add when users ask 'what changed?'
+
+
+
+04
+Monetization — Zero Cost, First Payment Today
+
+THE GOAL
+Get one founder to pay you $29 today. Not tomorrow. Today. One payment validates everything. Revenue before Product Hunt. Revenue before accelerator. Revenue before a landing page.
+
+Pricing Tiers
+
+Tier
+Price
+What They Get
+Target User
+Solo
+$29/month
+Daily brief, Gmail + Stripe + competitor radar, email delivery
+Indie hackers, bootstrappers, 1-person startups
+Founder
+$49/month
+Everything + WhatsApp delivery + voice brief + hiring intelligence
+Seed-stage founders, $10K-$500K ARR
+Team
+$99/month
+Everything + up to 3 team members, Slack delivery, weekly digest
+Small founding teams 2-5 people
+
+WHY $29 NOT FREE
+Sunsama charges $20 for a manual planner. You are charging $29 for an AI that saves 2 hours daily. That math works. Free users give you feedback. Paying users give you conviction. You want conviction.
+
+How to Take Payments — Zero Cost Setup
+
+	•	Go to stripe.com → create account (free) → activate payments
+	•	Create a Payment Link: Stripe Dashboard → Payment Links → Create → $29/month recurring
+	•	Copy the link — this is your buy button. Share it directly in DMs and posts.
+	•	No website needed yet. Just the Stripe link. People will pay if the product is real.
+
+LIFETIME DEAL STRATEGY
+For the first 20 users only: offer a $149 lifetime deal. This gives you immediate cash, 20 beta testers who care, and social proof ('20 founders already using this'). Time-limit it — expires Sunday midnight.
+
+
+
+05
+Launch Plan — What to Do in the Next 8 Hours
+
+YOUR UNFAIR ADVANTAGE TODAY
+You have a working product, a real email in your inbox as proof, TinyFish credits, and the TinyFish accelerator application open. Most people launching products today have a mockup. You have a live agent that ran at 3:46 AM.
+
+Hour 1 — The Screenshot That Sells
+
+You already have the most powerful sales asset: that Gmail screenshot. The email subject 'GOOD MORNING BRIEF — Sunday, February 22 2026' sitting in your inbox is the product demo. Use it everywhere.
+
+	•	Screenshot the Gmail inbox showing the email subject line and timestamp (3:46 AM)
+	•	Screenshot the email body showing Revenue Pulse + Inbox Priorities + Competitor Radar
+	•	These two screenshots are your entire marketing for the next 2 weeks
+
+Hour 2 — Post on X Right Now
+
+POST THIS ON X
+Built an AI chief of staff called Foundtel. It woke up at 3:46 AM, read my Gmail, checked my Stripe revenue, browsed competitor sites with @Tiny_Fish, and emailed me a 3-minute morning brief. Zero manual work. I lose 2 hours every morning gathering this context. Not anymore. Founding users: $29/mo or $149 lifetime (first 20 only). DM me or: [Stripe link] #TinyFishAccelerator #BuildInPublic #indiedev
+
+Attach both screenshots to the post. Tag @Tiny_Fish. Post between 9-11 AM for maximum reach.
+
+Hour 3 — Post on Reddit
+
+Post in r/startups AND r/SaaS AND r/Entrepreneur. Same post, slightly different framing for each:
+
+r/startups POST
+Title: 'I built an AI agent that sends me a morning brief every day at 7 AM — Revenue, Inbox, Competitors, all synthesized in 3 minutes'
+
+Body: As a founder I was losing 2 hours every morning manually checking Stripe, Gmail, and competitor sites before I could start real work. Built Foundtel using Google ADK + TinyFish Web Agent. It runs at 7 AM daily. Here's what it sent me this morning: [screenshot]. Happy to share the code / early access if anyone wants to try. Looking for 5 beta founders.
+
+r/SaaS POST
+Title: 'Show r/SaaS — Foundtel: AI morning brief agent for founders (built with Google ADK + TinyFish)'
+
+Body: Show HN style — just launched. Built this because I was losing 2hrs/morning to context gathering. Pulls Stripe + Gmail + competitor news into one email. Working since 3:46 AM today. Early pricing: $29/mo. Feedback welcome.
+
+Hour 4 — Post on LinkedIn
+
+LINKEDIN POST
+I stayed up until 3 AM last night building something.
+
+At 3:46 AM it sent me my first morning brief.
+
+Foundtel is an AI chief of staff that reads your Gmail, checks your Stripe revenue, browses your competitors' sites — and emails you a 3-minute brief before you wake up.
+
+I was losing 2 hours every morning gathering this context manually. Now I wake up to a decision-ready brief.
+
+Built with Google ADK + TinyFish Web Agent. Running live today.
+
+Early founding pricing: $29/month or $149 lifetime (first 20 founders only).
+
+DM me if you want access. [screenshot attached]
+
+Hour 5 — DM 10 Founders Directly
+
+Don't wait for inbound. Go to LinkedIn right now and find 10 founders in your network or connections. Filter by: solo founder, indie hacker, bootstrapped startup, CEO at startup.
+
+DM TEMPLATE
+Hey [Name] — built something you might relate to. I was losing 2 hours every morning checking Stripe + Gmail + competitor sites. Built Foundtel — it's an AI agent that does all of it and emails me a brief at 7 AM. Running since this morning. Happy to set it up for you free for 2 weeks, then $29/month if it saves you time. Want access?
+
+Hour 6 — Apply to TinyFish Accelerator
+
+	•	Your X post is live — it has the required hashtags #TinyFishAccelerator #BuildInPublic
+	•	Email accelerator@tinyfish.ai with subject: [Application for TinyFish Accelerator]
+	•	Attach screenshots of: the working Gmail brief, the ADK dev UI trace, the X post
+	•	One paragraph: what you built, how TinyFish powers the competitor agent, what you want from the program
+
+Hour 7-8 — Hacker News Show HN
+
+SHOW HN POST
+Show HN: Foundtel — AI agent that emails founders a morning brief (Stripe + Gmail + competitor research)
+
+Built with Google ADK and TinyFish Web Agent. It runs at 7 AM, pulls from Stripe revenue data, Gmail inbox, and uses TinyFish to actually browse competitor sites — then synthesizes everything into a structured email brief. Sent my first brief this morning at 3:46 AM. Code walkthrough in comments. Early access: $29/month.
+
+
+
+06
+30-Day Plan — From Working Agent to $2K MRR
+
+Week
+Goal
+Actions
+Success Metric
+Week 1
+First 3 paying users
+Launch on X, Reddit, LinkedIn, HN. DM 50 founders. Offer $149 LTD.
+3 payments received
+Week 2
+10 users + accelerator
+Add WhatsApp delivery + voice brief. TinyFish accelerator Pre-Flight.
+10 users, accepted to Pre-Flight
+Week 3
+Testimonials + Product Hunt prep
+Get 3 video testimonials. Build proper landing page. Prep PH assets.
+3 recorded testimonials
+Week 4
+Product Hunt launch + $2K MRR
+Launch on Product Hunt Tuesday. Post Show HN same day. Email list blast.
+$2,000 MRR (~70 users at $29)
+
+Zero-Cost Distribution Channels — Ranked by ROI
+
+Channel
+Effort
+Expected Result
+When
+Direct DMs to founders (LinkedIn/X)
+Low
+Highest conversion — 1 in 5 will try it
+TODAY
+X post with screenshots
+Low
+500-2000 impressions, 5-20 signups
+TODAY
+r/startups + r/SaaS Reddit posts
+Low
+200-500 qualified views, 2-10 signups
+TODAY
+Hacker News Show HN
+Low
+Unpredictable — can blow up or die. Worth the 10 mins.
+TODAY
+LinkedIn post
+Low
+Strong for B2B — founders trust LinkedIn posts more than ads
+TODAY
+TinyFish Accelerator (via X post)
+Already done
+Access to $2M seed pool + partner credits + mentorship
+This week
+Indie Hackers build-in-public post
+Medium
+Engaged community, good for early feedback + supporters
+Week 1
+Product Hunt launch
+High
+Big spike — save for when you have 3+ testimonials
+Week 4
+
+
+
+The product already works.
+The brief is already in your inbox.
+The only thing missing is the first person paying for it.
+
+Post the screenshot. Send the DMs. Set up the Stripe link.
+Do it in the next 60 minutes.
