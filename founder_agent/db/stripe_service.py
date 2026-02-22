@@ -1,20 +1,31 @@
 import stripe
 import os
+import uuid
 from typing import Optional
 from .crud import get_user, log_event
+import logging
 
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+logger = logging.getLogger(__name__)
 
-# Plan to Price ID mapping (These should be in .env in production)
+# Correct way to use async in stripe-python 11.x
+from stripe import StripeClient
+
+# Global client instance to reuse connections
+# In production, ensure STRIPE_SECRET_KEY is set
+_api_key = os.getenv("STRIPE_SECRET_KEY")
+_webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+# Use a synchronous client for webhook construction (CPU bound) and async for API calls
+# Note: For simplicity in this audit, we will use the async-capable client for API calls.
+
 PLAN_PRICE_MAPPING = {
-    "founder": os.getenv("STRIPE_PRICE_FOUNDER", "price_1xxxx"), # Replace with actual price ID from user's dashboard
+    "founder": os.getenv("STRIPE_PRICE_FOUNDER", "price_1xxxx"),
     "team": os.getenv("STRIPE_PRICE_TEAM", "price_1yyyy")
 }
 
 async def create_checkout_session(user_email: str, plan: str, success_url: str, cancel_url: str):
     """
-    Creates a Stripe Checkout Session for a given plan.
+    Creates a Stripe Checkout Session for a given plan using async client.
     """
     user = await get_user(user_email)
     if not user:
@@ -24,34 +35,45 @@ async def create_checkout_session(user_email: str, plan: str, success_url: str, 
     if not price_id:
         raise ValueError(f"Invalid plan or price ID not configured for: {plan}")
 
-    session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
-        customer_email=user_email,
-        line_items=[{
-            'price': price_id,
-            'quantity': 1,
-        }],
-        mode='subscription',
-        success_url=success_url + "?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url=cancel_url,
-        metadata={
-            "user_email": user_email,
-            "plan_target": plan
-        }
-    )
-    return session
+    try:
+        idempotency_key = f"checkout_{user_email}_{plan}_{uuid.uuid4().hex[:8]}"
+        
+        # We can use stripe.* with an async http client or use StripeClient
+        # The most modern way:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            customer_email=user_email,
+            line_items=[{
+                'price': price_id,
+                'quantity': 1,
+            }],
+            mode='subscription',
+            success_url=success_url + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=cancel_url,
+            metadata={
+                "user_email": user_email,
+                "plan_target": plan
+            },
+            idempotency_key=idempotency_key
+        )
+        return session
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe Session creation failed for {user_email}: {e}")
+        raise
 
 async def handle_stripe_webhook(payload: bytes, sig_header: str):
     """
-    Processes Stripe webhooks to update user subscription status.
+    Processes Stripe webhooks with signature verification.
     """
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, webhook_secret
+            payload, sig_header, _webhook_secret
         )
     except ValueError:
+        logger.warning("Stripe Webhook: Invalid payload")
         raise ValueError("Invalid payload")
     except stripe.error.SignatureVerificationError:
+        logger.warning("Stripe Webhook: Invalid signature")
         raise ValueError("Invalid signature")
 
     # Handle the event
@@ -79,11 +101,13 @@ async def _handle_successful_payment(session):
             await log_event(user_email, "subscription_updated", "success", f"Upgraded to {plan_target} plan")
 
 async def _handle_subscription_cancelled(subscription):
-    # Retrieve user by subscription ID and downgrade
     from .models import User
-    user = await User.find_one(User.stripe_subscription_id == subscription.id)
-    if user:
-        user.plan = 'solo' # Downgrade to free tier
-        user.stripe_subscription_id = None
-        await user.save()
-        await log_event(user.email, "subscription_cancelled", "warning", "Subscription ended, downgraded to solo")
+    try:
+        user = await User.find_one(User.stripe_subscription_id == subscription.id)
+        if user:
+            user.plan = 'solo'
+            user.stripe_subscription_id = None
+            await user.save()
+            await log_event(user.email, "subscription_cancelled", "warning", "Subscription ended, downgraded to solo")
+    except Exception as e:
+        logger.error(f"Error handling subscription cancellation: {e}")

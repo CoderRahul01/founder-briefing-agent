@@ -1,42 +1,44 @@
-import os
-import json
+import os, asyncio, json
 from datetime import datetime
 from google.adk.agents import LlmAgent
 from google.adk.tools import FunctionTool
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 
-def get_calendar_events() -> dict:
+async def get_calendar_events(gmail_token: str = None) -> dict:
     """Fetches up to 10 upcoming events for today from Google Calendar."""
-    token_str = os.environ.get('GMAIL_OAUTH_TOKEN') # Using same env var for simplicity as it contains the multi-scope token
-    if not token_str:
+    if not gmail_token:
         return {'error': 'No Google token available'}
         
-    creds_json = json.loads(token_str)
-    creds = Credentials.from_authorized_user_info(creds_json)
-    service = build('calendar', 'v3', credentials=creds)
-    
-    # Get the start and end of today
-    now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    
-    print(f"Fetching calendar events since {now}...")
-    events_result = service.events().list(
-        calendarId='primary', timeMin=now,
-        maxResults=10, singleEvents=True,
-        orderBy='startTime'
-    ).execute()
-    events = events_result.get('items', [])
-    
-    event_list = []
-    for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        event_list.append({
-            'summary': event.get('summary', 'No Title'),
-            'start': start,
-            'description': event.get('description', '')
-        })
+    try:
+        creds_json = json.loads(gmail_token)
+        creds = Credentials.from_authorized_user_info(creds_json)
         
-    return {'events': event_list}
+        def _fetch_calendar():
+            service = build('calendar', 'v3', credentials=creds)
+            # Get the start and end of today
+            now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+            
+            events_result = service.events().list(
+                calendarId='primary', timeMin=now,
+                maxResults=10, singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            events = events_result.get('items', [])
+            
+            event_list = []
+            for event in events:
+                start = event['start'].get('dateTime', event['start'].get('date'))
+                event_list.append({
+                    'summary': event.get('summary', 'No Title'),
+                    'start': start,
+                    'description': event.get('description', '')
+                })
+            return {'events': event_list}
+
+        return await asyncio.to_thread(_fetch_calendar)
+    except Exception as e:
+        return {'error': f"Calendar API error: {str(e)}"}
 
 calendar_tool = FunctionTool(func=get_calendar_events)
 

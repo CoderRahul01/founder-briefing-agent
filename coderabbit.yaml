@@ -1,0 +1,26 @@
+# coderabbit.yaml
+language: "en-US"
+enable_pro_review: true
+review_status: true
+collapse_walkthrough: false
+chat_enabled: true
+early_access: false
+reviews:
+  profile: "Senior Full Stack Python Engineer / AI Systems Architect"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: true
+  review_status: true
+  collapse_walkthrough: false
+  path_instructions:
+    - path: "**/*.py"
+      instructions: |
+        - Ensure strict asynchronous IO operations, avoiding blocking calls within async functions.
+        - Validate against prompt injection logic in agent configurations.
+        - Verify graceful error handling of external API dependencies (Stripe, Twilio, Gmail API).
+        - Ensure MongoDB indexes are logical and connection pooling is managed safely.
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
