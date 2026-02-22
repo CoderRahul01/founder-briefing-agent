@@ -194,6 +194,9 @@ Do NOT repeat these items today.
         logger.warning(f"Vertex AI failed for {user.email}, falling back to Public API: {e}")
         async with httpx.AsyncClient() as h_client:
             GEMINI_API_KEY = os.getenv('GOOGLE_API_KEY')
+            if not GEMINI_API_KEY:
+                raise Exception(f"Vertex AI failed ({e}) and no GOOGLE_API_KEY provided for fallback.")
+                
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
@@ -201,7 +204,14 @@ Do NOT repeat these items today.
             }
             resp = await h_client.post(url, json=payload, timeout=30.0)
             resp_data = resp.json()
-            brief_text = resp_data['candidates'][0]['content']['parts'][0]['text']
+            if 'error' in resp_data:
+                logger.error(f"Fallback API Error: {resp_data['error']}")
+                raise Exception(f"Gemini API Error: {resp_data['error'].get('message', 'Unknown Error')}")
+                
+            try:
+                brief_text = resp_data['candidates'][0]['content']['parts'][0]['text']
+            except (KeyError, IndexError):
+                raise Exception(f"Invalid format from Gemini fallback API. Response: {resp_data}")
 
     # Save and Deliver
     await save_brief(user.email, brief_text, emails_seen, comp_headlines)
