@@ -13,8 +13,20 @@
         <!-- Competitors -->
         <div class="glass p-8 rounded-3xl space-y-6">
             <div class="space-y-2">
-                <h2 class="text-xl font-bold">Competitor Intelligence</h2>
-                <p class="text-sm text-white/40">Enter the domains or names of companies you want TinyFish to monitor.</p>
+                <h2 class="text-xl font-bold flex items-center justify-between">
+                    Competitor Intelligence
+                    {% if user.plan == 'solo' %}
+                    <span class="text-xs bg-white/10 px-2 py-1 rounded text-white/60">Free: Up to 3</span>
+                    {% else %}
+                    <span class="text-xs bg-green-500/20 px-2 py-1 rounded text-green-400 border border-green-500/20 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Pro Limitless
+                    </span>
+                    {% endif %}
+                </h2>
+                <p class="text-sm text-white/40">Enter the domains or names of companies you want TinyFish to monitor. 
+                   {% if user.plan == 'solo' %}Upgrade to track unlimited numbers of competitors.{% endif %}
+                </p>
             </div>
             <div class="space-y-1">
                 <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Competitor List</label>
@@ -40,10 +52,18 @@
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">WhatsApp Number</label>
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1 flex justify-between">
+                        WhatsApp Number
+                        {% if user.plan == 'solo' %}
+                        <span class="text-yellow-500 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            Pro Only
+                        </span>
+                        {% endif %}
+                    </label>
                     <input type="text" name="whatsapp_number" value="{{ user.whatsapp_number or '' }}"
-                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
-                           placeholder="+1234567890">
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 transition-all {% if user.plan == 'solo' %}opacity-50 cursor-not-allowed{% else %}focus:outline-none focus:border-white/20{% endif %}"
+                           placeholder="+1234567890" {% if user.plan == 'solo' %}disabled title="Upgrade to Pro for WhatsApp Delivery"{% endif %}>
                 </div>
             </div>
         </div>

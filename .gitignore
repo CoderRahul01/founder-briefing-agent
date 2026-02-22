@@ -33,6 +33,13 @@ secrets/
 *.json
 !reasoning_engine_deploy.py
 !Dockerfile
+.env
+*.pem
+*.key
+*.token
+credentials_*.json
+token_*.json
+oauth_*.json
 
 # IDEs
 .vscode/

@@ -1,5 +1,10 @@
-import asyncio, os
+import asyncio, os, sys
+from pathlib import Path
 from dotenv import load_dotenv
+
+# Add parent directory to sys.path to allow importing from founder_agent
+sys.path.append(str(Path(__file__).parent.parent))
+
 load_dotenv()
 
 async def main():
@@ -14,7 +19,8 @@ async def main():
         return
 
     # Fetch token from the secrets location we set up earlier
-    token_path = os.path.join(os.path.dirname(__file__), 'secrets', 'token.json')
+    # Fetch token from the secrets location
+    token_path = Path(__file__).parent.parent / "founder_agent" / "secrets" / "token.json"
     try:
         with open(token_path) as f:
             token_str = f.read()

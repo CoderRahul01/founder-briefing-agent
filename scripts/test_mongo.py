@@ -1,5 +1,10 @@
-import asyncio
+import asyncio, os, sys
+from pathlib import Path
 from dotenv import load_dotenv
+
+# Add parent directory to sys.path to allow importing from founder_agent
+sys.path.append(str(Path(__file__).parent.parent))
+
 load_dotenv()
 
 async def test():

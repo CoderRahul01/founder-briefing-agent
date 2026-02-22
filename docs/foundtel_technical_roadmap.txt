@@ -69,11 +69,11 @@ Get your MongoDB connection string
 
 	•	In Atlas → click Connect on Cluster0
 	•	Choose 'Drivers' → Python → version 3.12+
-	•	Copy the connection string — looks like: mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/
+	•	Copy the connection string — looks like: mongodb+srv://<USERNAME>:<PASSWORD>@<CLUSTER_URL>/
 	•	Add to your .env file:
 
 # Add this to your .env file
-MONGODB_URL=mongodb+srv://your_username:your_password@cluster0.xxxxx.mongodb.net/foundtel?retryWrites=true&w=majority
+MONGODB_URL=mongodb+srv://<USERNAME>:<PASSWORD>@<CLUSTER_URL>/foundtel?retryWrites=true&w=majority
 
 # IMPORTANT: Replace <password> with your actual Atlas password
 # The database name 'foundtel' is at the end of the URL

@@ -6,15 +6,24 @@ from datetime import datetime
 
 class User(Document):
     email:            str
-    stripe_key:       Optional[str]  = None
+    stripe_key:       Optional[str]  = None           # User's personal key for revenue tracking
     gmail_token:      Optional[str]  = None
     competitor_list:  str            = 'Linear,Notion,Asana'
     delivery_email:   Optional[str]  = None
     whatsapp_number:  Optional[str]  = None
-    plan:             str            = 'solo'
+    
+    # Billing Info (Platform Monetization)
+    plan:                   str            = 'solo'   # solo / founder / team
+    stripe_customer_id:     Optional[str]  = None
+    stripe_subscription_id: Optional[str]  = None
+    
     is_active:        bool           = True
     created_at:       datetime       = Field(default_factory=datetime.utcnow)
     last_brief_at:    Optional[datetime] = None
+    
+    # Usage Tracking
+    manual_triggers_used:    int                = 0
+    manual_trigger_reset_at: Optional[datetime] = None
 
     class Settings:
         name = 'users'

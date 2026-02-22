@@ -12,10 +12,15 @@ from founder_agent.db.connection import connect_db
 from founder_agent.db.crud import get_user, get_brief_history
 from founder_agent.db.models import User
 from founder_agent.deliver_brief import run_brief_for_user, run_all_briefs
+from founder_agent.a2a_exposure import a2a_app
+from founder_agent.db.stripe_service import create_checkout_session, handle_stripe_webhook
 
 load_dotenv()
 
 app = FastAPI()
+# Mount A2A protocol exposure
+app.mount("/a2a", a2a_app)
+
 # Use a static secret key from env or fallback for persistent sessions across restarts
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", "foundtel-secure-session-secret-999"))
 
@@ -170,10 +175,34 @@ async def update_settings(request: Request,
     if not user:
         return RedirectResponse(url="/")
     
-    user.competitor_list = competitor_list
+    # 🛡️ Guardrails: Plan-based limits
+    cleaned_competitors = [c.strip() for c in competitor_list.split(",") if c.strip()]
+    
+    warning_message = None
+    
+    if user.plan == 'solo':
+        # Free tier: Max 3 competitors, No WhatsApp
+        if len(cleaned_competitors) > 3:
+            cleaned_competitors = cleaned_competitors[:3]
+            warning_message = "Solo plan supports up to 3 competitors. Upgrade to Pro to track unlimited companies."
+            
+        if whatsapp_number.strip():
+            whatsapp_number = "" # Enforce no WhatsApp for solo
+            if not warning_message:
+                warning_message = "WhatsApp delivery is only available in the Pro tier."
+        
+    user.competitor_list = ",".join(cleaned_competitors)
     user.stripe_key = stripe_key
     user.whatsapp_number = whatsapp_number
     await user.save()
+    
+    if warning_message:
+         briefs = await get_brief_history(user.email)
+         return templates.TemplateResponse("settings.html", {
+            "request": request,
+            "user": user,
+            "error": warning_message
+         })
     
     return RedirectResponse(url="/dashboard", status_code=303)
 
@@ -196,18 +225,29 @@ async def trigger_brief_now(request: Request, user: User = Depends(get_current_u
     if not user:
         return RedirectResponse(url="/")
     
-    from founder_agent.db.crud import get_recent_brief_count
-    count = await get_recent_brief_count(user.email)
+    from datetime import datetime, timedelta
+    from founder_agent.db.crud import log_event
     
-    if count >= 3:
-        # Show an error or flash message on the dashboard
+    now = datetime.utcnow()
+    
+    # Check if reset is needed
+    if user.manual_trigger_reset_at is None or now >= user.manual_trigger_reset_at:
+        user.manual_triggers_used = 0
+        user.manual_trigger_reset_at = now + timedelta(days=7)
+    
+    # Enforce Limits
+    if user.plan == "solo" and user.manual_triggers_used >= 1:
+        await log_event(user.email, "upgrade_prompt_shown", "manual_trigger_limit", metadata={"current_count": user.manual_triggers_used})
         briefs = await get_brief_history(user.email)
         return templates.TemplateResponse("dashboard.html", {
             "request": request,
             "user": user,
             "briefs": briefs,
-            "error": "Daily manual limit reached (3/day). Please wait until tomorrow for your next brief."
+            "error": "Manual trigger limit reached (1/week on Free tier). Upgrade to Founder for unlimited on-demand briefs."
         })
+        
+    user.manual_triggers_used += 1
+    await user.save()
 
     await run_brief_for_user(user)
     return RedirectResponse(url="/dashboard", status_code=303)
@@ -220,3 +260,36 @@ async def trigger_briefs(request: Request):
         
     await run_all_briefs()
     return {"status": "Daily briefs triggered successfully"}
+
+# -- Stripe Routes --
+
+@app.get("/checkout/{plan}")
+async def checkout(plan: str, request: Request, user: User = Depends(get_current_user)):
+    user = login_required(user)
+    
+    success_url = str(request.url_for('dashboard'))
+    cancel_url = str(request.url_for('dashboard'))
+    
+    try:
+        session = await create_checkout_session(user.email, plan, success_url, cancel_url)
+        return RedirectResponse(url=session.url, status_code=303)
+    except Exception as e:
+        # Redirect back to dashboard with error
+        briefs = await get_brief_history(user.email)
+        return templates.TemplateResponse("dashboard.html", {
+            "request": request,
+            "user": user,
+            "briefs": briefs,
+            "error": f"Stripe Checkout Error: {str(e)}"
+        })
+
+@app.post("/stripe-webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    
+    try:
+        result = await handle_stripe_webhook(payload, sig_header)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -12,9 +12,9 @@
     {% endif %}
     <!-- Header -->
     <div class="flex justify-between items-end">
-        <div class="space-y-2">
-            <h1 class="text-5xl font-bold tracking-tight">Dashboard</h1>
-            <p class="text-white/50 text-lg">Your agent is active and monitoring {{ user.competitor_list or 'your competitors' }}.</p>
+        <div class="space-y-1">
+            <h1 class="text-4xl font-semibold tracking-tight">Dashboard</h1>
+            <p class="text-white/40 text-base">Your agent is active and monitoring {{ user.competitor_list or 'your competitors' }}.</p>
         </div>
         <div class="flex space-x-3">
             <form action="/trigger-briefs-now" method="post">
@@ -31,7 +31,12 @@
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="glass p-8 rounded-3xl space-y-4">
-            <div class="text-white/50 text-sm font-medium uppercase tracking-wider">Plan Status</div>
+            <div class="text-white/50 text-sm font-medium uppercase tracking-wider flex justify-between items-center">
+                <span>Plan Status</span>
+                {% if user.plan == 'solo' %}
+                <a href="/checkout/founder" class="text-xs bg-white text-black px-2 py-1 rounded-full font-bold hover:bg-white/80 transition-all">Upgrade to Founder</a>
+                {% endif %}
+            </div>
             <div class="text-3xl font-bold flex items-center space-x-2">
                 <span>{{ user.plan|capitalize }}</span>
                 <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full border border-green-500/20">Active</span>

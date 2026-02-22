@@ -1,6 +1,11 @@
-import os
+import os, sys
+from pathlib import Path
 import vertexai
 from vertexai.preview.reasoning_engines import ReasoningEngine
+
+# Add parent directory to sys.path to allow importing from founder_agent
+sys.path.append(str(Path(__file__).parent.parent))
+
 from founder_agent.agent import root_agent
 
 def deploy_agent():
