@@ -34,7 +34,7 @@
                     <input type="text" name="competitor_list" value="{{ user.competitor_list }}"
                            class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
                            placeholder="Linear, Notion, Asana">
-                    <p class="text-xs text-white/35">Tip: names work well for broad watching. Domains help when you care about specific product or pricing pages.</p>
+                    <p class="text-xs text-white/35">Duplicates are automatically removed, so you can paste a quick brainstorm list without cleanup.</p>
                 </div>
             </div>
 
@@ -45,15 +45,73 @@
                 </div>
                 <ul class="space-y-3 text-sm text-white/60">
                     <li class="rounded-2xl border border-white/10 bg-black/20 p-4">Track 2-5 meaningful competitors rather than everyone in the market.</li>
-                    <li class="rounded-2xl border border-white/10 bg-black/20 p-4">Connect Stripe if revenue trends should shape the day's priorities.</li>
-                    <li class="rounded-2xl border border-white/10 bg-black/20 p-4">Use WhatsApp for urgent delivery once you upgrade beyond Solo.</li>
+                    <li class="rounded-2xl border border-white/10 bg-black/20 p-4">Switch digest style depending on whether you need speed or strategic depth this week.</li>
+                    <li class="rounded-2xl border border-white/10 bg-black/20 p-4">List priority contacts so the brief can surface conversations that deserve extra care.</li>
                 </ul>
             </div>
         </div>
 
         <div class="glass p-8 rounded-3xl space-y-6">
             <div class="space-y-2">
-                <h2 class="text-2xl font-bold">Revenue and delivery</h2>
+                <h2 class="text-2xl font-bold">Delivery and brief style</h2>
+                <p class="text-sm text-white/40">Decide where the brief lands, how often it runs, and how detailed it should feel.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-5">
+                <div class="space-y-2">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Delivery email</label>
+                    <input type="email" name="delivery_email" value="{{ user.delivery_email or user.email }}"
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
+                           placeholder="founder@company.com">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Brief time (UTC)</label>
+                    <input type="time" name="briefing_time" value="{{ user.briefing_time or '07:00' }}"
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Cadence</label>
+                    <select name="briefing_days" class="w-full bg-slate-950 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all">
+                        <option value="weekdays" {% if (user.briefing_days or 'weekdays') == 'weekdays' %}selected{% endif %}>Weekdays only</option>
+                        <option value="daily" {% if user.briefing_days == 'daily' %}selected{% endif %}>Every day</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Digest style</label>
+                    <select name="digest_style" class="w-full bg-slate-950 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all">
+                        <option value="concise" {% if (user.digest_style or 'concise') == 'concise' %}selected{% endif %}>Concise founder summary</option>
+                        <option value="deep" {% if user.digest_style == 'deep' %}selected{% endif %}>Deep strategic analysis</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass p-8 rounded-3xl space-y-6">
+            <div class="space-y-2">
+                <h2 class="text-2xl font-bold">Founder context</h2>
+                <p class="text-sm text-white/40">Give the agent the context a thoughtful chief of staff would already know.</p>
+            </div>
+
+            <div class="space-y-5">
+                <div class="space-y-2">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Strategic focus</label>
+                    <textarea name="strategic_focus" rows="4" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all" placeholder="Example: Tighten enterprise retention, prep investor updates, and reduce support load for top-tier customers.">{{ user.strategic_focus or '' }}</textarea>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Priority contacts</label>
+                    <input type="text" name="priority_contacts" value="{{ user.priority_contacts or '' }}"
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
+                           placeholder="Lead investor, top customer, head of product">
+                </div>
+            </div>
+        </div>
+
+        <div class="glass p-8 rounded-3xl space-y-6">
+            <div class="space-y-2">
+                <h2 class="text-2xl font-bold">Revenue and alternate delivery</h2>
                 <p class="text-sm text-white/40">Add the channels that make the brief more useful in your real life, not just in theory.</p>
             </div>
 
