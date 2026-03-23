@@ -23,6 +23,7 @@ from founder_agent.sub_agents.revenue_agent import get_stripe_revenue
 from founder_agent.sub_agents.inbox_agent import get_urgent_emails
 from founder_agent.sub_agents.competitor_agent import browse_competitor_news
 from founder_agent.sub_agents.calendar_agent import get_calendar_events
+from founder_agent.dashboard_utils import DIGEST_DEEP, user_should_receive_brief_on
 
 load_dotenv()
 
@@ -129,10 +130,27 @@ Do NOT repeat these items today.
     emails_seen = [e.get('subject') for e in inbox_data.get('top_emails', []) if isinstance(e, dict)]
     comp_headlines = [n.get('headline') for n in competitor_news if isinstance(n, dict) and n.get('headline')]
     
+    digest_style = getattr(user, 'digest_style', 'concise')
+    strategic_focus = (getattr(user, 'strategic_focus', None) or '').strip()
+    priority_contacts = (getattr(user, 'priority_contacts', None) or '').strip()
+    depth_instruction = (
+        'Go deeper than usual: explain why the signal matters, identify trade-offs, and surface strategic implications.'
+        if digest_style == DIGEST_DEEP else
+        'Keep it concise and skimmable. Favor clarity over exhaustiveness.'
+    )
+
+    founder_context_lines = []
+    if strategic_focus:
+        founder_context_lines.append(f'Strategic focus for this founder: {strategic_focus}')
+    if priority_contacts:
+        founder_context_lines.append(f'Priority contacts to keep in mind: {priority_contacts}')
+    founder_context = '\n'.join(founder_context_lines)
+
     system_instruction = f'''
     You are an elite but deeply human chief of staff briefing a tech founder every morning.
     Today is {datetime.today().strftime('%A, %B %d %Y')}.
     {memory_context}
+    {founder_context}
 
     INSTRUCTIONS:
     1. Review the data for accuracy. If a sub-agent failed, omit that section gracefully.
@@ -140,6 +158,7 @@ Do NOT repeat these items today.
     3. Write like a trusted operator who understands both business pressure and human energy.
     4. Check for hallucinations: Do not invent revenue, inbox items, calendar events, or competitor moves.
     5. Focus on what matters most, what can wait, and where a thoughtful conversation may matter.
+    6. {depth_instruction}
 
     OUTPUT FORMAT:
     GOOD MORNING BRIEF — {datetime.today().strftime('%A, %B %d %Y')}
@@ -237,6 +256,9 @@ async def run_all_briefs():
     async def _safe_run(user):
         async with semaphore:
             try:
+                if not user_should_receive_brief_on(datetime.utcnow(), getattr(user, 'briefing_days', 'weekdays')):
+                    await log_event(user.email, 'brief_skipped', 'success', 'Skipped due to briefing cadence preference')
+                    return
                 await run_brief_for_user(user)
             except Exception as e:
                 await log_event(user.email, 'brief_error', 'failure', str(e))

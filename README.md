@@ -8,6 +8,9 @@ Foundtel is a proactive AI chief of staff that gives tech founders a 3-minute mo
 - **Revenue Pulse**: Real-time Stripe MRR and revenue monitoring.
 - **Inbox Priorities**: Urgent emails categorization and surfacing.
 - **Competitor Radar**: Automated tracking of competitor blogs and changelogs.
+- **Personalized Delivery Controls**: Set delivery email, cadence, and digest depth from the settings page.
+- **Founder Context Memory**: Add strategic focus areas and priority contacts so the brief reflects what matters now.
+- **Searchable Brief Archive**: Filter recent briefs and export them as Markdown for sharing or record-keeping.
 - **Agent2Agent (A2A)**: High-performance multi-agent architecture.
 
 ## 🛠️ Technical Stack

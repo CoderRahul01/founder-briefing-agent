@@ -11,6 +11,11 @@ class User(Document):
     competitor_list:  str            = 'Linear,Notion,Asana'
     delivery_email:   Optional[str]  = None
     whatsapp_number:  Optional[str]  = None
+    briefing_days:    str            = 'weekdays'
+    briefing_time:    str            = '07:00'
+    digest_style:     str            = 'concise'
+    strategic_focus:  Optional[str]  = None
+    priority_contacts: Optional[str] = None
     
     # Billing Info (Platform Monetization)
     plan:                   str            = 'solo'   # solo / founder / team

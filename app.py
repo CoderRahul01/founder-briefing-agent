@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Form, Depends, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
@@ -7,11 +7,22 @@ import os
 import json
 import asyncio
 from datetime import datetime, timedelta
+from typing import Optional
 from dotenv import load_dotenv
 
 from founder_agent.db.connection import connect_db
 from founder_agent.db.crud import get_user, get_brief_history
 from founder_agent.db.models import User
+from founder_agent.dashboard_utils import (
+    DIGEST_CONCISE,
+    DIGEST_DEEP,
+    DAILY_MODE,
+    WEEKDAY_MODE,
+    compute_next_brief_label,
+    export_briefs_as_markdown,
+    filter_briefs_by_query,
+    normalize_csv_list,
+)
 from founder_agent.deliver_brief import run_brief_for_user, run_all_briefs
 from founder_agent.a2a_exposure import a2a_app
 from founder_agent.db.stripe_service import create_checkout_session, handle_stripe_webhook
@@ -82,21 +93,11 @@ def summarize_brief(brief_text: str):
     return cleaned[:180] + ("..." if len(cleaned) > 180 else "")
 
 
-def compute_next_brief_label(now: datetime):
-    next_run = now.replace(hour=7, minute=0, second=0, microsecond=0)
-    if now >= next_run:
-        next_run += timedelta(days=1)
-    if next_run.date() == now.date():
-        return "Today, 7:00 AM"
-    if next_run.date() == (now + timedelta(days=1)).date():
-        return "Tomorrow, 7:00 AM"
-    return next_run.strftime('%A, %B %d at 7:00 AM')
-
-
-def build_dashboard_context(user: User, briefs):
-    competitor_names = [item.strip() for item in (user.competitor_list or '').split(',') if item.strip()]
+def build_dashboard_context(user: User, briefs, search_query: str = ""):
+    competitor_names = normalize_csv_list(user.competitor_list or "")
     latest_brief = briefs[0] if briefs else None
     latest_sections = parse_brief_sections(latest_brief.brief_text) if latest_brief else []
+    filtered_briefs = filter_briefs_by_query(briefs, search_query)
 
     manual_remaining = "Unlimited" if user.plan != 'solo' else max(0, 1 - (user.manual_triggers_used or 0))
     integration_status = [
@@ -132,6 +133,10 @@ def build_dashboard_context(user: User, briefs):
         },
     ]
 
+    briefing_days = getattr(user, "briefing_days", WEEKDAY_MODE)
+    briefing_time = getattr(user, "briefing_time", "07:00")
+    digest_style = getattr(user, "digest_style", DIGEST_CONCISE)
+
     return {
         "competitor_names": competitor_names,
         "competitor_count": len(competitor_names),
@@ -139,8 +144,10 @@ def build_dashboard_context(user: User, briefs):
         "latest_sections": latest_sections,
         "latest_summary": summarize_brief(latest_brief.brief_text) if latest_brief else None,
         "brief_count": len(briefs),
+        "filtered_briefs": filtered_briefs,
+        "brief_search_query": search_query,
         "manual_remaining": manual_remaining,
-        "next_brief_label": compute_next_brief_label(datetime.utcnow()),
+        "next_brief_label": compute_next_brief_label(datetime.utcnow(), briefing_days, briefing_time),
         "integration_status": integration_status,
         "focus_question": "What conversation would make today feel meaningfully better by 5 PM?",
         "morning_message": (
@@ -149,6 +156,17 @@ def build_dashboard_context(user: User, briefs):
             "Your first brief is on the way. Once it lands, this space will help you turn information into calm, decisive action."
         ),
         "founder_nudges": founder_nudges,
+        "delivery_preferences": {
+            "email": user.delivery_email or user.email,
+            "briefing_days": briefing_days,
+            "briefing_time": briefing_time,
+            "digest_style": digest_style,
+        },
+        "strategy_snapshot": {
+            "focus": (user.strategic_focus or "").strip(),
+            "contacts": normalize_csv_list(user.priority_contacts or ""),
+        },
+        "digest_style_label": "Deep strategic analysis" if digest_style == DIGEST_DEEP else "Concise founder summary",
     }
 
 
@@ -240,7 +258,7 @@ async def auth_callback(request: Request):
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request, user: User = Depends(get_current_user)):
+async def dashboard(request: Request, search: Optional[str] = None, user: User = Depends(get_current_user)):
     if not user:
         return RedirectResponse(url="/")
 
@@ -249,7 +267,7 @@ async def dashboard(request: Request, user: User = Depends(get_current_user)):
         "request": request,
         "user": user,
         "briefs": briefs,
-        **build_dashboard_context(user, briefs),
+        **build_dashboard_context(user, briefs, search or ""),
     })
 
 
@@ -257,7 +275,12 @@ async def dashboard(request: Request, user: User = Depends(get_current_user)):
 async def settings(request: Request, user: User = Depends(get_current_user)):
     if not user:
         return RedirectResponse(url="/")
-    return templates.TemplateResponse("settings.html", {"request": request, "user": user})
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "user": user,
+        "allowed_delivery_modes": [WEEKDAY_MODE, DAILY_MODE],
+        "allowed_digest_styles": [DIGEST_CONCISE, DIGEST_DEEP],
+    })
 
 
 @app.post("/update-settings")
@@ -265,37 +288,67 @@ async def update_settings(request: Request,
                           competitor_list: str = Form(...),
                           stripe_key: str = Form(""),
                           whatsapp_number: str = Form(""),
+                          delivery_email: str = Form(""),
+                          briefing_days: str = Form(WEEKDAY_MODE),
+                          briefing_time: str = Form("07:00"),
+                          digest_style: str = Form(DIGEST_CONCISE),
+                          strategic_focus: str = Form(""),
+                          priority_contacts: str = Form(""),
                           user: User = Depends(get_current_user)):
     if not user:
         return RedirectResponse(url="/")
 
-    cleaned_competitors = [c.strip() for c in competitor_list.split(",") if c.strip()]
-
+    competitor_limit = 3 if user.plan == 'solo' else None
+    cleaned_competitors = normalize_csv_list(competitor_list, limit=competitor_limit)
+    cleaned_contacts = normalize_csv_list(priority_contacts, limit=6)
     warning_message = None
 
-    if user.plan == 'solo':
-        if len(cleaned_competitors) > 3:
-            cleaned_competitors = cleaned_competitors[:3]
-            warning_message = "Solo plan supports up to 3 competitors. Upgrade to Pro to track unlimited companies."
+    if user.plan == 'solo' and len(normalize_csv_list(competitor_list)) > 3:
+        warning_message = "Solo plan supports up to 3 competitors. Upgrade to Pro to track unlimited companies."
 
-        if whatsapp_number.strip():
-            whatsapp_number = ""
-            if not warning_message:
-                warning_message = "WhatsApp delivery is only available in the Pro tier."
+    if user.plan == 'solo' and whatsapp_number.strip():
+        whatsapp_number = ""
+        if not warning_message:
+            warning_message = "WhatsApp delivery is only available in the Pro tier."
+
+    if briefing_days not in {WEEKDAY_MODE, DAILY_MODE}:
+        briefing_days = WEEKDAY_MODE
+
+    if digest_style not in {DIGEST_CONCISE, DIGEST_DEEP}:
+        digest_style = DIGEST_CONCISE
 
     user.competitor_list = ",".join(cleaned_competitors)
-    user.stripe_key = stripe_key
-    user.whatsapp_number = whatsapp_number
+    user.stripe_key = stripe_key or None
+    user.whatsapp_number = whatsapp_number.strip() or None
+    user.delivery_email = (delivery_email or user.email).strip()
+    user.briefing_days = briefing_days
+    user.briefing_time = briefing_time or "07:00"
+    user.digest_style = digest_style
+    user.strategic_focus = strategic_focus.strip() or None
+    user.priority_contacts = ",".join(cleaned_contacts) if cleaned_contacts else None
     await user.save()
 
     if warning_message:
         return templates.TemplateResponse("settings.html", {
             "request": request,
             "user": user,
-            "error": warning_message
+            "error": warning_message,
+            "allowed_delivery_modes": [WEEKDAY_MODE, DAILY_MODE],
+            "allowed_digest_styles": [DIGEST_CONCISE, DIGEST_DEEP],
         })
 
     return RedirectResponse(url="/dashboard", status_code=303)
+
+
+@app.get("/briefs/export", response_class=PlainTextResponse)
+async def export_briefs(request: Request, user: User = Depends(get_current_user)):
+    if not user:
+        return RedirectResponse(url="/")
+
+    briefs = await get_brief_history(user.email, limit=30)
+    content = export_briefs_as_markdown(user.email, briefs)
+    headers = {"Content-Disposition": 'attachment; filename="foundtel-briefs.md"'}
+    return PlainTextResponse(content, headers=headers)
 
 
 @app.get("/logout")
