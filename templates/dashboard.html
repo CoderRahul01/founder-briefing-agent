@@ -3,91 +3,160 @@
 {% block title %}Dashboard - Foundtel{% endblock %}
 
 {% block content %}
-<div class="space-y-12">
+<div class="space-y-10">
     {% if error %}
-    <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl flex items-center space-x-3 animate-pulse">
+    <div class="bg-red-500/10 border border-red-500/20 text-red-300 p-4 rounded-2xl flex items-center space-x-3">
         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
         <span class="font-medium">{{ error }}</span>
     </div>
     {% endif %}
-    <!-- Header -->
-    <div class="flex justify-between items-end">
-        <div class="space-y-1">
-            <h1 class="text-4xl font-semibold tracking-tight">Dashboard</h1>
-            <p class="text-white/40 text-base">Your agent is active and monitoring {{ user.competitor_list or 'your competitors' }}.</p>
-        </div>
-        <div class="flex space-x-3">
-            <form action="/trigger-briefs-now" method="post">
-                <button type="submit" class="bg-white/5 hover:bg-white/10 px-6 py-3 rounded-2xl transition-all font-medium border border-white/5">
-                    Generate Brief Now
-                </button>
-            </form>
-            <a href="/settings" class="bg-white text-black px-6 py-3 rounded-2xl hover:bg-white/90 transition-all font-medium">
-                System Settings
-            </a>
-        </div>
-    </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="glass p-8 rounded-3xl space-y-4">
-            <div class="text-white/50 text-sm font-medium uppercase tracking-wider flex justify-between items-center">
-                <span>Plan Status</span>
-                {% if user.plan == 'solo' %}
-                <a href="/checkout/founder" class="text-xs bg-white text-black px-2 py-1 rounded-full font-bold hover:bg-white/80 transition-all">Upgrade to Founder</a>
-                {% endif %}
-            </div>
-            <div class="text-3xl font-bold flex items-center space-x-2">
-                <span>{{ user.plan|capitalize }}</span>
-                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full border border-green-500/20">Active</span>
-            </div>
-        </div>
-        <div class="glass p-8 rounded-3xl space-y-4">
-            <div class="text-white/50 text-sm font-medium uppercase tracking-wider">Integrations</div>
-            <div class="flex space-x-2">
-                <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center border border-blue-500/20" title="Gmail Connected">
-                    <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                </div>
-                {% if user.stripe_key %}
-                <div class="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center border border-indigo-500/20" title="Stripe Connected">
-                    <svg class="w-4 h-4 text-indigo-400" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 1.99-.9 1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/></svg>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        <div class="glass p-8 rounded-3xl space-y-4">
-            <div class="text-white/50 text-sm font-medium uppercase tracking-wider">Next Brief</div>
-            <div class="text-3xl font-bold">Tomorrow, 7:00 AM</div>
-        </div>
-    </div>
-
-    <!-- Brief History -->
-    <div class="space-y-6">
-        <h2 class="text-2xl font-bold">Brief History</h2>
-        {% if briefs %}
-        <div class="space-y-4">
-            {% for brief in briefs %}
-            <div class="glass p-6 rounded-2xl flex justify-between items-center group hover:bg-white/[0.05] transition-all cursor-pointer">
-                <div class="space-y-1">
-                    <div class="font-bold text-lg">Daily Brief — {{ brief.date }}</div>
-                    <div class="text-white/40 text-sm line-clamp-1 truncate max-w-xl">
-                        {{ brief.brief_text[:100] }}...
+    <section class="grid gap-6 lg:grid-cols-[1.4fr,0.9fr] items-stretch">
+        <div class="glass p-8 rounded-3xl space-y-6 bg-gradient-to-br from-white/8 via-white/4 to-transparent">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="space-y-3 max-w-2xl">
+                    <div class="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs uppercase tracking-[0.24em] text-emerald-300">
+                        Founder morning system
                     </div>
+                    <h1 class="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">A calmer, more human start to your workday.</h1>
+                    <p class="text-white/65 text-lg leading-relaxed">{{ morning_message }}</p>
                 </div>
-                <button class="opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 px-4 py-2 rounded-xl text-sm font-medium border border-white/5">
-                    View Full Brief
-                </button>
+                <div class="flex flex-wrap gap-3">
+                    <form action="/trigger-briefs-now" method="post">
+                        <button type="submit" class="bg-white text-black px-6 py-3 rounded-2xl hover:bg-white/90 transition-all font-medium shadow-lg shadow-white/10">
+                            Generate Brief Now
+                        </button>
+                    </form>
+                    <a href="/settings" class="bg-white/5 hover:bg-white/10 px-6 py-3 rounded-2xl transition-all font-medium border border-white/10">
+                        Tune Your Brief
+                    </a>
+                </div>
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="glass p-12 rounded-3xl text-center space-y-4">
-            <div class="text-white/20">
-                <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                <p>No briefs generated yet. Your agent is preparing your first one.</p>
+
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="rounded-2xl border border-white/10 bg-black/20 p-5 space-y-2">
+                    <div class="text-sm text-white/45 uppercase tracking-[0.2em]">Next delivery</div>
+                    <div class="text-2xl font-semibold">{{ next_brief_label }}</div>
+                    <div class="text-sm text-white/45">Designed for a 3-minute read before the day gets loud.</div>
+                </div>
+                <div class="rounded-2xl border border-white/10 bg-black/20 p-5 space-y-2">
+                    <div class="text-sm text-white/45 uppercase tracking-[0.2em]">Competitors watched</div>
+                    <div class="text-2xl font-semibold">{{ competitor_count }}</div>
+                    <div class="text-sm text-white/45">{% if competitor_names %}{{ competitor_names|join(', ') }}{% else %}Add companies in settings{% endif %}</div>
+                </div>
+                <div class="rounded-2xl border border-white/10 bg-black/20 p-5 space-y-2">
+                    <div class="text-sm text-white/45 uppercase tracking-[0.2em]">Manual briefs left</div>
+                    <div class="text-2xl font-semibold">{{ manual_remaining }}</div>
+                    <div class="text-sm text-white/45">{% if user.plan == 'solo' %}Solo includes one on-demand brief each week.{% else %}Your plan supports flexible refreshes whenever context changes.{% endif %}</div>
+                </div>
             </div>
         </div>
-        {% endif %}
-    </div>
+
+        <aside class="glass p-8 rounded-3xl space-y-5">
+            <div class="space-y-2">
+                <div class="text-sm text-white/45 uppercase tracking-[0.2em]">Daily focus question</div>
+                <h2 class="text-2xl font-semibold leading-snug">{{ focus_question }}</h2>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3">
+                <div class="text-sm font-medium text-white/80">A gentle founder ritual</div>
+                <ol class="space-y-2 text-sm text-white/60 list-decimal list-inside">
+                    <li>Read the brief once for signal, not perfection.</li>
+                    <li>Choose one person to respond to with care.</li>
+                    <li>Turn one insight into a concrete decision before noon.</li>
+                </ol>
+            </div>
+            <div class="space-y-3">
+                <div class="text-sm text-white/45 uppercase tracking-[0.2em]">Integration health</div>
+                {% for item in integration_status %}
+                <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                    <div>
+                        <div class="font-medium">{{ item.name }}</div>
+                        <div class="text-sm text-white/45">{{ item.status }}</div>
+                    </div>
+                    <div class="h-2.5 w-2.5 rounded-full {% if item.status == 'Connected' %}bg-emerald-400{% elif item.status == 'Needs attention' %}bg-amber-400{% else %}bg-white/25{% endif %}"></div>
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-[1.3fr,0.95fr]">
+        <div class="glass p-8 rounded-3xl space-y-6">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <p class="text-sm text-white/45 uppercase tracking-[0.2em]">Latest brief</p>
+                    <h2 class="text-3xl font-semibold">Your strategic readout</h2>
+                </div>
+                {% if latest_brief %}
+                <span class="text-sm text-white/45">{{ latest_brief.date }}</span>
+                {% endif %}
+            </div>
+
+            {% if latest_brief %}
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-5 text-white/70 leading-relaxed">
+                    {{ latest_summary }}
+                </div>
+                <div class="grid gap-4">
+                    {% for section in latest_sections %}
+                    <div class="rounded-2xl border border-white/10 bg-black/20 p-5 space-y-2">
+                        <div class="text-sm uppercase tracking-[0.18em] text-white/45">{{ section.heading }}</div>
+                        <div class="text-base leading-relaxed text-white/80">{{ section.body }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <details class="rounded-2xl border border-white/10 bg-black/20 p-5">
+                    <summary class="cursor-pointer font-medium text-white/85">Read the full founder brief</summary>
+                    <pre class="mt-4 whitespace-pre-wrap text-sm text-white/65 leading-relaxed">{{ latest_brief.brief_text }}</pre>
+                </details>
+            {% else %}
+                <div class="rounded-3xl border border-dashed border-white/10 p-10 text-center text-white/45 space-y-3">
+                    <div class="text-5xl">☀️</div>
+                    <p>Your first brief is still being prepared. Once it lands, this area will turn raw updates into a thoughtful narrative you can act on.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="space-y-6">
+            <div class="glass p-8 rounded-3xl space-y-5">
+                <div>
+                    <p class="text-sm text-white/45 uppercase tracking-[0.2em]">Human-centered prompts</p>
+                    <h2 class="text-2xl font-semibold">Small moves that create momentum</h2>
+                </div>
+                <div class="space-y-4">
+                    {% for nudge in founder_nudges %}
+                    <div class="rounded-2xl border border-white/10 bg-black/20 p-5 space-y-2">
+                        <div class="font-medium text-white/90">{{ nudge.title }}</div>
+                        <div class="text-sm text-white/60 leading-relaxed">{{ nudge.body }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="glass p-8 rounded-3xl space-y-5">
+                <div>
+                    <p class="text-sm text-white/45 uppercase tracking-[0.2em]">Brief history</p>
+                    <h2 class="text-2xl font-semibold">Recent mornings</h2>
+                </div>
+                {% if briefs %}
+                <div class="space-y-3">
+                    {% for brief in briefs %}
+                    <details class="group rounded-2xl border border-white/10 bg-black/20 px-5 py-4">
+                        <summary class="cursor-pointer list-none flex items-start justify-between gap-4">
+                            <div>
+                                <div class="font-medium">Daily Brief — {{ brief.date }}</div>
+                                <div class="text-sm text-white/45 mt-1">{{ brief.brief_text[:110] }}{% if brief.brief_text|length > 110 %}...{% endif %}</div>
+                            </div>
+                            <span class="text-xs text-white/35 group-open:hidden">Expand</span>
+                        </summary>
+                        <pre class="mt-4 whitespace-pre-wrap text-sm text-white/65 leading-relaxed">{{ brief.brief_text }}</pre>
+                    </details>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-white/45">No stored briefs yet. Generate one above to start building your memory trail.</p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}

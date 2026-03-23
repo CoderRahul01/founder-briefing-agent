@@ -3,67 +3,80 @@
 {% block title %}Settings - Foundtel{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto space-y-12">
-    <div class="space-y-2">
-        <h1 class="text-5xl font-bold tracking-tight text-center">Settings</h1>
-        <p class="text-white/50 text-center">Configure your agent's data sources and delivery.</p>
+<div class="max-w-4xl mx-auto space-y-10">
+    <div class="space-y-3 text-center">
+        <h1 class="text-5xl font-bold tracking-tight">Shape your daily brief</h1>
+        <p class="text-white/50 max-w-2xl mx-auto">Choose the companies, signals, and delivery channels that make Foundtel feel like a thoughtful teammate instead of another dashboard.</p>
     </div>
 
+    {% if error %}
+    <div class="bg-amber-500/10 border border-amber-500/20 text-amber-200 p-4 rounded-2xl text-sm">
+        {{ error }}
+    </div>
+    {% endif %}
+
     <form action="/update-settings" method="post" class="space-y-8">
-        <!-- Competitors -->
-        <div class="glass p-8 rounded-3xl space-y-6">
-            <div class="space-y-2">
-                <h2 class="text-xl font-bold flex items-center justify-between">
-                    Competitor Intelligence
-                    {% if user.plan == 'solo' %}
-                    <span class="text-xs bg-white/10 px-2 py-1 rounded text-white/60">Free: Up to 3</span>
-                    {% else %}
-                    <span class="text-xs bg-green-500/20 px-2 py-1 rounded text-green-400 border border-green-500/20 flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                        Pro Limitless
-                    </span>
-                    {% endif %}
-                </h2>
-                <p class="text-sm text-white/40">Enter the domains or names of companies you want TinyFish to monitor. 
-                   {% if user.plan == 'solo' %}Upgrade to track unlimited numbers of competitors.{% endif %}
-                </p>
+        <div class="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+            <div class="glass p-8 rounded-3xl space-y-6">
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-bold flex items-center justify-between">
+                        Competitor intelligence
+                        {% if user.plan == 'solo' %}
+                        <span class="text-xs bg-white/10 px-2 py-1 rounded text-white/60">Solo: up to 3</span>
+                        {% else %}
+                        <span class="text-xs bg-green-500/20 px-2 py-1 rounded text-green-400 border border-green-500/20">Unlimited tracking</span>
+                        {% endif %}
+                    </h2>
+                    <p class="text-sm text-white/40">Add the companies that shape your market. We'll watch for launches, pricing movement, and notable updates so you can respond with perspective.</p>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Competitor list</label>
+                    <input type="text" name="competitor_list" value="{{ user.competitor_list }}"
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
+                           placeholder="Linear, Notion, Asana">
+                    <p class="text-xs text-white/35">Tip: names work well for broad watching. Domains help when you care about specific product or pricing pages.</p>
+                </div>
             </div>
-            <div class="space-y-1">
-                <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Competitor List</label>
-                <input type="text" name="competitor_list" value="{{ user.competitor_list }}" 
-                       class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
-                       placeholder="Linear, Notion, Asana">
+
+            <div class="glass p-8 rounded-3xl space-y-5">
+                <div>
+                    <h2 class="text-2xl font-bold">What makes a great brief?</h2>
+                    <p class="text-sm text-white/45 mt-2">The best brief balances signal and humanity. Aim for sources that help you understand revenue, customer needs, and important relationships.</p>
+                </div>
+                <ul class="space-y-3 text-sm text-white/60">
+                    <li class="rounded-2xl border border-white/10 bg-black/20 p-4">Track 2-5 meaningful competitors rather than everyone in the market.</li>
+                    <li class="rounded-2xl border border-white/10 bg-black/20 p-4">Connect Stripe if revenue trends should shape the day's priorities.</li>
+                    <li class="rounded-2xl border border-white/10 bg-black/20 p-4">Use WhatsApp for urgent delivery once you upgrade beyond Solo.</li>
+                </ul>
             </div>
         </div>
 
-        <!-- Integrations -->
         <div class="glass p-8 rounded-3xl space-y-6">
             <div class="space-y-2">
-                <h2 class="text-xl font-bold">Revenue & Delivery</h2>
-                <p class="text-sm text-white/40">Connect your financial data and mobile alerts.</p>
+                <h2 class="text-2xl font-bold">Revenue and delivery</h2>
+                <p class="text-sm text-white/40">Add the channels that make the brief more useful in your real life, not just in theory.</p>
             </div>
-            
-            <div class="space-y-4">
-                <div class="space-y-1">
-                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Stripe Secret Key</label>
+
+            <div class="grid md:grid-cols-2 gap-5">
+                <div class="space-y-2">
+                    <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1">Stripe secret key</label>
                     <input type="password" name="stripe_key" value="{{ user.stripe_key or '' }}"
                            class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none focus:border-white/20 transition-all"
                            placeholder="sk_live_...">
+                    <p class="text-xs text-white/35">Optional, but useful if you want a revenue pulse in each morning brief.</p>
                 </div>
 
-                <div class="space-y-1">
+                <div class="space-y-2">
                     <label class="text-xs uppercase tracking-widest text-white/50 font-bold ml-1 flex justify-between">
-                        WhatsApp Number
+                        <span>WhatsApp number</span>
                         {% if user.plan == 'solo' %}
-                        <span class="text-yellow-500 flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            Pro Only
-                        </span>
+                        <span class="text-yellow-500">Founder plan feature</span>
                         {% endif %}
                     </label>
                     <input type="text" name="whatsapp_number" value="{{ user.whatsapp_number or '' }}"
                            class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 transition-all {% if user.plan == 'solo' %}opacity-50 cursor-not-allowed{% else %}focus:outline-none focus:border-white/20{% endif %}"
-                           placeholder="+1234567890" {% if user.plan == 'solo' %}disabled title="Upgrade to Pro for WhatsApp Delivery"{% endif %}>
+                           placeholder="+1234567890" {% if user.plan == 'solo' %}disabled title="Upgrade to Founder for WhatsApp Delivery"{% endif %}>
+                    <p class="text-xs text-white/35">Helpful if your mornings start away from your inbox.</p>
                 </div>
             </div>
         </div>
@@ -72,7 +85,7 @@
             Save Settings
         </button>
     </form>
-    
+
     <div class="text-center">
         <a href="/dashboard" class="text-white/30 hover:text-white transition-colors text-sm">Back to Dashboard</a>
     </div>
